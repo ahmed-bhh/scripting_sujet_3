@@ -1,0 +1,8 @@
+-c : compresser
+• -d : déplacer
+• -t : supprimer ancien fichier
+• -h: Pour afficher le help détaillé à partir d’un fichier texte
+• -g: Pour afficher un menu textuel et gérer les fonctionnalité de façon
+graphique(Utilisation de YAD).
+• -v: Pour afficher le nom des auteurs et version du code.
+• -m : pour afficher un menu textuel (en boucle) qui permet d’accédé à chaque fonction

@@ -1,0 +1,148 @@
+#!/bin/bash
+
+function show_usage() {
+        echo `basename $0` ': [-h] [-m] [-t] [-c] [-g] [-d] [-m] [-v] Path :' `dirname $(realpath $0)`
+
+}
+
+
+
+function display_help() {
+        while read p
+        do echo $p
+        done < help.txt
+}
+
+
+
+check_compressed_file() {
+    local file_path="$1"
+    
+    if [[ ! -e "$file_path" ]]; then
+        echo "Erreur: Le fichier '$file_path' n'existe pas."
+        return 2
+    fi
+    
+    file_output=$(file "$file_path")
+    
+    echo "Commande file output: $file_output"
+    
+    if [[ "$file_output" == *"gzip compressed data"* ]]; then
+        echo "Le fichier est déjà compressé."
+        return 0  
+    else
+        echo "Le fichier n'est pas compressé."
+        return 1  
+    fi
+}
+
+
+set_compressed_file() {
+    local file_path="$1"
+
+
+    check_compressed_file "$file_path"
+    local result=$?
+
+
+    if [[ $result -eq 1 ]]; then
+        gzip "$file_path"
+        echo "Fichier compressé avec succès."
+    else
+        echo "Aucune opération n'est nécessaire."
+    fi
+}
+
+move_folder_to_trash() {
+    local file_path="$1"
+
+    check_compressed_file "$file_path"
+    local result=$?
+
+    if [[ $result -eq 0 ]]; then
+        mkdir -p trash
+
+        mv "${file_path}" trash/
+        echo "Le fichier '${file_path}' a été déplacé dans la corbeille."
+    else
+        echo "Le fichier '${file_path}' n'est pas compressé, aucune action nécessaire."
+    fi
+}
+
+auteurs()
+{
+  echo "les auteurs sont : taher belhaj hassen  "
+  echo "version du code :2.0"
+}
+
+
+
+clean_trash() {
+    local trash_dir="trash"
+
+    if [[ ! -d "$trash_dir" ]]; then
+        echo "Le dossier '$trash_dir' n'existe pas."
+        return 1
+    fi
+
+    find "$trash_dir" -type f -mtime +2 -exec rm -f {} \;
+
+    echo "Les fichiers dans '$trash_dir' qui datent de plus de 48 heures ont été supprimés."
+}
+
+
+
+
+
+#hedha el menu mta3 l option -m
+text_menu()
+{
+ps3="choix :"
+select item in "-show_usage-" "-help-" "-AffichFile-" "-AfficheDirectory" "-NB-" "-DirectoryUser-" "-dateAccess-" "-dateModif-" "-stat-"
+do
+echo "vous avez choisis l'item $REPLY:$item"
+case $REPLY in
+ 
+1)
+echo "show_usage"
+show_usage
+;;
+2)
+echo "help"
+display_help
+;;
+3)
+echo "affichefile"
+AfficheFile
+echo "voir fichier_journal"
+;;
+4)
+AfficheDirectory
+echo "voir dossier_journal"
+;;
+5)
+NB
+echo "voir fichier count"
+;;
+6)
+echo "donnez nom du dossier"
+directoryUser
+;;
+7)
+dateAcess
+echo "voir fichier date_journal"
+;;
+8)
+dateModif
+echo "voir fichier midif_journal"
+;;
+9)
+plot
+;;
+*)
+echo "choix incorrect"
+exit 0
+;;
+esac
+done
+}
