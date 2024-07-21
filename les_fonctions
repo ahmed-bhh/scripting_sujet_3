@@ -18,21 +18,25 @@ function display_help() {
 check_compressed_file() {
     local file_path="$1"
     
+    # Vérifier si le fichier existe
     if [[ ! -e "$file_path" ]]; then
         echo "Erreur: Le fichier '$file_path' n'existe pas."
         return 2
     fi
     
+    # Utiliser la commande file pour vérifier le type du fichier
     file_output=$(file "$file_path")
     
+    # Afficher la sortie pour débogage
     echo "Commande file output: $file_output"
     
+    # Vérifier si la sortie contient 'gzip compressed data'
     if [[ "$file_output" == *"gzip compressed data"* ]]; then
         echo "Le fichier est déjà compressé."
-        return 0  
+        return 0  # Vrai (0 en Bash signifie succès)
     else
         echo "Le fichier n'est pas compressé."
-        return 1  
+        return 1  # Faux (1 en Bash signifie échec)
     fi
 }
 
@@ -56,17 +60,30 @@ set_compressed_file() {
 move_folder_to_trash() {
     local file_path="$1"
 
+    # Appeler la fonction check_compressed_file et capturer son code de retour
     check_compressed_file "$file_path"
     local result=$?
 
-    if [[ $result -eq 0 ]]; then
-        mkdir -p trash
-
+    # Vérifier si le fichier est compressé (code de retour 0)
+    if [[ $result -eq 1 ]]; then
+     set_compressed_file "$file_path"
+     
+     mkdir -p trash
+        mv "${file_path}".gz"" trash/
+        echo "Le fichier '${file_path}' a été déplacé dans la corbeille."
+        
+        
+        else
+         mkdir -p trash
         mv "${file_path}" trash/
         echo "Le fichier '${file_path}' a été déplacé dans la corbeille."
-    else
-        echo "Le fichier '${file_path}' n'est pas compressé, aucune action nécessaire."
-    fi
+        
+     
+     fi
+
+        
+    
+
 }
 
 auteurs()
@@ -80,16 +97,19 @@ auteurs()
 clean_trash() {
     local trash_dir="trash"
 
+    # Vérifier si le dossier 'trash' existe
     if [[ ! -d "$trash_dir" ]]; then
         echo "Le dossier '$trash_dir' n'existe pas."
         return 1
     fi
 
-    find "$trash_dir" -type f -mtime +2 -exec rm -f {} \;
+    # Trouver et supprimer les fichiers dans 'trash' modifiés il y a plus de 2 minutes
+    find "$trash_dir" -type f -mmin +2 -exec rm -f {} \;
+    #    find "$trash_dir" -type f -mtime +2 -exec rm -f {} \;
 
-    echo "Les fichiers dans '$trash_dir' qui datent de plus de 48 heures ont été supprimés."
+
+    echo "Les fichiers dans '$trash_dir' qui datent de plus de 2 minutes ont été supprimés."
 }
-
 
 
 
@@ -98,7 +118,7 @@ clean_trash() {
 text_menu()
 {
 ps3="choix :"
-select item in "-show_usage-" "-help-" "-AffichFile-" "-AfficheDirectory" "-NB-" "-DirectoryUser-" "-dateAccess-" "-dateModif-" "-stat-"
+select item in "-show_usage-" "-help-" "-compresser-" "-move to trash" "-auteurs-" "-verifier_trash-" 
 do
 echo "vous avez choisis l'item $REPLY:$item"
 case $REPLY in
@@ -112,32 +132,26 @@ echo "help"
 display_help
 ;;
 3)
-echo "affichefile"
-AfficheFile
-echo "voir fichier_journal"
+echo "compresser file"
+echo " donner le nom du fichier a compresser"
+read compresser
+
+set_compressed_file "$compresser"
+
 ;;
 4)
-AfficheDirectory
-echo "voir dossier_journal"
+echo "donner le fichier a deplacer vers /trash"
+read trash
+move_folder_to_trash "$trash"
+
 ;;
 5)
-NB
-echo "voir fichier count"
+auteurs
+
 ;;
 6)
 echo "donnez nom du dossier"
-directoryUser
-;;
-7)
-dateAcess
-echo "voir fichier date_journal"
-;;
-8)
-dateModif
-echo "voir fichier midif_journal"
-;;
-9)
-plot
+clean_trash
 ;;
 *)
 echo "choix incorrect"
